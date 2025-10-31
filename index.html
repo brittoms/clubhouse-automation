@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clubhouse Automation Tools — by Kannan</title>
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  color: white;
+  text-align: center;
+  margin: 0;
+  padding: 30px;
+}
+.container {
+  background: rgba(255,255,255,0.1);
+  padding: 30px;
+  border-radius: 20px;
+  max-width: 600px;
+  margin: auto;
+  box-shadow: 0 0 30px rgba(0,0,0,0.2);
+}
+input, button {
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  margin: 5px;
+  font-size: 16px;
+}
+input {
+  width: 65%;
+}
+button {
+  background: #0284c7;
+  color: white;
+  cursor: pointer;
+}
+button:hover {
+  background: #0369a1;
+}
+img {
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  margin-top: 15px;
+  border: 3px solid #f0f9ff;
+}
+.profile {
+  text-align: left;
+  margin-top: 20px;
+}
+.section {
+  margin-top: 25px;
+  padding: 15px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎧 Welcome to Clubhouse Automation</h1>
+    <p>Developed by <b>Kannan</b></p>
+    <input type="text" id="username" placeholder="Enter Clubhouse username">
+    <button onclick="fetchProfile()">Search Profile</button>
+
+    <div id="profile"></div>
+
+    <div class="section">
+      <h3>Update Profile Details</h3>
+      <input type="text" id="newName" placeholder="New Name">
+      <button onclick="updateField('name', newName.value)">Update Name</button><br>
+      <input type="text" id="newDisplay" placeholder="New Display Name">
+      <button onclick="updateField('display', newDisplay.value)">Update Display</button><br>
+      <input type="text" id="newUsername" placeholder="New Username">
+      <button onclick="updateField('username', newUsername.value)">Update Username</button>
+    </div>
+  </div>
+
+<script>
+const BACKEND_URL = "https://YOUR_BACKEND_URL.onrender.com"; // Replace with backend URL
+
+async function fetchProfile() {
+  const username = document.getElementById('username').value.trim();
+  if (!username) return alert("Enter username!");
+
+  const res = await fetch(`${BACKEND_URL}/api/profile?username=${username}`);
+  const data = await res.json();
+
+  if (data.error) {
+    document.getElementById("profile").innerHTML = `<p style="color:red;">${data.error}</p>`;
+    return;
+  }
+
+  const photo = `${BACKEND_URL}/api/photo?url=${encodeURIComponent(data.photo_url)}`;
+  const download = `${BACKEND_URL}/api/download?username=${username}`;
+
+  document.getElementById("profile").innerHTML = `
+    <img src="${photo}" alt="Profile Picture">
+    <div class="profile">
+      <h2>${data.name || 'N/A'} (@${data.username || 'N/A'})</h2>
+      <p><b>Display:</b> ${data.displayname || 'N/A'}</p>
+      <p><b>Followers:</b> ${data.num_followers || 0}</p>
+      <p><b>Following:</b> ${data.num_following || 0}</p>
+      <p><b>Bio:</b> ${data.bio || 'No bio'}</p>
+      <p><b>Created:</b> ${data.time_created || 'N/A'}</p>
+      <a href="${download}" target="_blank"><button>📄 Download Profile Info</button></a>
+    </div>
+  `;
+}
+
+async function updateField(action, value) {
+  if (!value.trim()) return alert("Enter a value first!");
+  const res = await fetch(`${BACKEND_URL}/api/update`, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({action, value})
+  });
+  const data = await res.json();
+  if (data.success) {
+    alert(data.message);
+  } else {
+    alert("Error: " + (data.error || "Update failed."));
+  }
+}
+</script>
+</body>
+</html>
